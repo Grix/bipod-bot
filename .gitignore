@@ -32,3 +32,8 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+
+*Cache
+*.log
+ml-agents
+metadata

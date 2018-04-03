@@ -1,0 +1,1 @@
+C:\Libraries\Dev\Unity\bipod\bipod\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
