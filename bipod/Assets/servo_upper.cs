@@ -22,7 +22,7 @@ public class servo_upper : MonoBehaviour {
 		
 	}
 
-	public void SetRotation(float offset)
+	public void SetAngle(float offset)
 	{
 		targetAngle = Mathf.Clamp(offset, -30, 30);
 	}
