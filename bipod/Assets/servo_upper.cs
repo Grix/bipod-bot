@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class servo_upper : MonoBehaviour {
 
-    public float targetAngle = 5;
+    public float targetAngle = 0;
 	float torque = 200;
 
     void Start () {
@@ -13,17 +13,18 @@ public class servo_upper : MonoBehaviour {
 	void Update () {
 		
 		//rotate towards target angle
+		float targetAngleDeg = targetAngle*65-45;
 		float currentAngle = transform.localEulerAngles.z;
 		if (currentAngle > 180) 
 			currentAngle -= 360;
-		float rotAngle = Mathf.Clamp(targetAngle - currentAngle, -1, 1) * torque * Time.deltaTime;
-		rotAngle = Mathf.Clamp(rotAngle, -Mathf.Abs(targetAngle - currentAngle), Mathf.Abs(targetAngle - currentAngle));
+		float rotAngle = Mathf.Clamp(targetAngleDeg - currentAngle, -1, 1) * torque * Time.deltaTime;
+		rotAngle = Mathf.Clamp(rotAngle, -Mathf.Abs(targetAngleDeg - currentAngle), Mathf.Abs(targetAngleDeg - currentAngle));
 		transform.Rotate(Vector3.forward * rotAngle);
 		
 	}
 
 	public void SetAngle(float offset)
 	{
-		targetAngle = Mathf.Clamp(offset, -30, 30);
+		targetAngle = Mathf.Clamp(offset, -1, 1);
 	}
 }

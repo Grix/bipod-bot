@@ -24,6 +24,10 @@ public class imu : MonoBehaviour {
 		angLast = transform.rotation.eulerAngles;
 		timer = 0;
 	}
+
+	public void Reset () {
+		Start();
+	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {

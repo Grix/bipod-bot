@@ -13,79 +13,73 @@ public class BipodAgent : Agent
 	public GameObject LeftLower;
 	public GameObject IMU;
 
+    Vector3 startPos;
+
     public override void InitializeAgent()
     {
-
+        startPos = transform.position;
     }
 
     public override void CollectObservations()
     {
 		AddVectorObs(RightAxis.GetComponent<servo_axis>().targetAngle);
 		AddVectorObs(RightUpper.GetComponent<servo_upper>().targetAngle);
-		AddVectorObs(RightLower.GetComponent<servo_upper>().targetAngle);
+		AddVectorObs(RightLower.GetComponent<servo_lower>().targetAngle);
 		AddVectorObs(LeftAxis.GetComponent<servo_axis>().targetAngle);
 		AddVectorObs(LeftUpper.GetComponent<servo_upper>().targetAngle);
-		AddVectorObs(LeftLower.GetComponent<servo_upper>().targetAngle);
-		AddVectorObs(IMU.GetComponent<imu>().linAccel);
-		AddVectorObs(IMU.GetComponent<imu>().angAccel);
+		AddVectorObs(LeftLower.GetComponent<servo_lower>().targetAngle);
+		AddVectorObs(Mathf.Clamp(IMU.GetComponent<imu>().linAccel.x / 20f, -1f, 1f));        
+        AddVectorObs(Mathf.Clamp(IMU.GetComponent<imu>().linAccel.y / 20f, -1f, 1f));
+        AddVectorObs(Mathf.Clamp(IMU.GetComponent<imu>().linAccel.z / 20f, -1f, 1f));
+		AddVectorObs(Mathf.Clamp(IMU.GetComponent<imu>().angAccel.x / 1000f, -1f, 1f));        
+        AddVectorObs(Mathf.Clamp(IMU.GetComponent<imu>().angAccel.y / 1000f, -1f, 1f));
+        AddVectorObs(Mathf.Clamp(IMU.GetComponent<imu>().angAccel.z / 1000f, -1f, 1f));
 
-        // AddVectorObs(gameObject.transform.rotation.z);
-        // AddVectorObs(gameObject.transform.rotation.x);
-        // AddVectorObs((ball.transform.position - gameObject.transform.position));
-        // AddVectorObs(ball.transform.GetComponent<Rigidbody>().velocity);
-        // SetTextObs("Testing " + gameObject.GetInstanceID());
+        SetTextObs("Testing " + gameObject.GetInstanceID());
     }
 
     public override void AgentAction(float[] vectorAction, string textAction)
     {
-		RightAxis.GetComponent<servo_axis>().SetAngle(vectorAction[0]);
-		RightUpper.GetComponent<servo_upper>().SetAngle(vectorAction[1]);
-		RightLower.GetComponent<servo_upper>().SetAngle(vectorAction[2]);
-		LeftAxis.GetComponent<servo_axis>().SetAngle(vectorAction[3]);
-		LeftUpper.GetComponent<servo_upper>().SetAngle(vectorAction[4]);
-		LeftLower.GetComponent<servo_upper>().SetAngle(vectorAction[5]);
+		RightAxis.GetComponent<servo_axis>().SetAngle(Mathf.Clamp(vectorAction[0], -1f, 1f));
+		RightUpper.GetComponent<servo_upper>().SetAngle(Mathf.Clamp(vectorAction[1], -1f, 1f));
+		RightLower.GetComponent<servo_lower>().SetAngle(Mathf.Clamp(vectorAction[2], -1f, 1f));
+		LeftAxis.GetComponent<servo_axis>().SetAngle(Mathf.Clamp(vectorAction[3], -1f, 1f));
+		LeftUpper.GetComponent<servo_upper>().SetAngle(Mathf.Clamp(vectorAction[4], -1f, 1f));
+		LeftLower.GetComponent<servo_lower>().SetAngle(Mathf.Clamp(vectorAction[5], -1f, 1f));
 
-		SetReward(0.1f);
-		SetReward(-(IMU.GetComponent<imu>().linAccel + Vector3.up*9.81f).magnitude); //loss if bipod not upright
-		SetReward(-(IMU.GetComponent<imu>().angAccel).magnitude); //loss if bipod rotating
-        // if (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
-        // {
-        //     float action_z = 2f * Mathf.Clamp(vectorAction[0], -1f, 1f);
-        //     if ((gameObject.transform.rotation.z < 0.25f && action_z > 0f) ||
-        //         (gameObject.transform.rotation.z > -0.25f && action_z < 0f))
-        //     {
-        //         gameObject.transform.Rotate(new Vector3(0, 0, 1), action_z);
-        //     }
-        //     float action_x = 2f * Mathf.Clamp(vectorAction[1], -1f, 1f);
-        //     if ((gameObject.transform.rotation.x < 0.25f && action_x > 0f) ||
-        //         (gameObject.transform.rotation.x > -0.25f && action_x < 0f))
-        //     {
-        //         gameObject.transform.Rotate(new Vector3(1, 0, 0), action_x);
-        //     }
+        float reward = 0.1f;
+        //reward -= (IMU.GetComponent<imu>().linAccel + Vector3.up*9.81f).magnitude/100; //loss if bipod not upright
+        //reward -= IMU.GetComponent<imu>().angAccel.magnitude/2000; //loss if bipod rotating
+        //reward += (Mathf.Min(0, IMU.transform.position.y*2)); //loss if hub too low
+        // print(reward);
 
-        //     SetReward(0.1f);
+        //print("ang:"+IMU.GetComponent<imu>().angAccel);
+        //print("lin:"+IMU.GetComponent<imu>().linAccel);
 
-        // }
-        // if ((ball.transform.position.y - gameObject.transform.position.y) < -2f ||
-        //     Mathf.Abs(ball.transform.position.x - gameObject.transform.position.x) > 3f ||
-        //     Mathf.Abs(ball.transform.position.z - gameObject.transform.position.z) > 3f)
-        // {
-        //     Done();
-        //     SetReward(-1f);
-        // }
+        if (!IsDone())
+            SetReward(Mathf.Clamp(reward, -1f, 1f));
 
+        if (IMU.transform.position.y < -0.18f)
+        {
+            SetReward(-1);
+            Done();
+        }
 
     }
 
     public override void AgentReset()
     {
-        //todo reset
-		RightAxis.GetComponent<servo_axis>().SetAngle(0);
-		RightUpper.GetComponent<servo_upper>().SetAngle(0);
-		RightLower.GetComponent<servo_upper>().SetAngle(0);
-		LeftAxis.GetComponent<servo_axis>().SetAngle(0);
-		LeftUpper.GetComponent<servo_upper>().SetAngle(0);
-		LeftLower.GetComponent<servo_upper>().SetAngle(0);
+        RightAxis.transform.localEulerAngles =  new Vector3(180, 0, 0);
+		RightUpper.transform.localEulerAngles =  Vector3.zero;
+		RightLower.transform.localEulerAngles =  Vector3.zero;
+		LeftAxis.transform.localEulerAngles =  new Vector3(180, 0, 0);
+		LeftUpper.transform.localEulerAngles =  Vector3.zero;
+        LeftLower.transform.localEulerAngles =  Vector3.zero;
+        transform.position = startPos;
+        transform.eulerAngles = new Vector3(Random.Range(-10.0f, 10.0f), Random.Range(-5.0f, 5.0f), Random.Range(-5.0f, 5.0f));
+        gameObject.GetComponent<Rigidbody>().velocity = new Vector3(Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f));
+        gameObject.GetComponent<Rigidbody>().angularVelocity = new Vector3(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f));
+        IMU.GetComponent<imu>().Reset();
     }
 
 }
